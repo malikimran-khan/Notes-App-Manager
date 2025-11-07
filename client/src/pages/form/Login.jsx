@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaEnvelope, FaLock, FaUserPlus, FaSignInAlt, FaExclamationCircle } from "react-icons/fa";
+import { 
+  FaEnvelope, 
+  FaLock, 
+  FaUserPlus, 
+  FaSignInAlt, 
+  FaExclamationCircle 
+} from "react-icons/fa";
 import Spinner from "../../components/Spinner";
 
 export default function Login() {
@@ -11,9 +17,36 @@ export default function Login() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For design purpose, no actual login
+    setSubmitting(true);
+    setError("");
+
+    try {
+      // Example backend endpoint (change to your actual API)
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid email or password");
+      }
+
+      // ✅ Save token in localStorage
+      localStorage.setItem("token", data.token);
+
+      // ✅ Navigate to protected page (e.g. About)
+      navigate("/about");
+    } catch (err) {
+      setError(err.message);
+      console.error("Login Error:", err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -35,7 +68,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Error */}
+        {/* Error Message */}
         {error && (
           <div className="flex items-center bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm">
             <FaExclamationCircle className="mr-2" />
@@ -43,7 +76,7 @@ export default function Login() {
           </div>
         )}
 
-        {/* Email */}
+        {/* Email Input */}
         <div className="flex items-center border rounded-lg mb-5 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
           <FaEnvelope className="text-gray-400 mr-3" />
           <input
@@ -57,7 +90,7 @@ export default function Login() {
           />
         </div>
 
-        {/* Password */}
+        {/* Password Input */}
         <div className="flex items-center border rounded-lg mb-6 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
           <FaLock className="text-gray-400 mr-3" />
           <input
@@ -71,7 +104,7 @@ export default function Login() {
           />
         </div>
 
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={submitting}

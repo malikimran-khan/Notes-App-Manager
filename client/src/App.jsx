@@ -5,6 +5,7 @@ import HomeMain from './pages/home/HomeMain'
 import Login from './pages/form/Login';
 import Signup from './pages/form/Signup';
 import AboutMain from './pages/about/AboutMain';
+import VerifyEmail from './pages/form/VerifyEmail';
 export default function App() {
   return (
     <>
@@ -15,6 +16,8 @@ export default function App() {
         <Route path='/login' element={<Login/>}></Route>
         <Route path='/signup' element={<Signup/>}></Route>
         <Route path='/about' element={<AboutMain/>}></Route>
+        <Route path="/verify/:token" element={<VerifyEmail/>} />
+
       </Routes>
     </BrowserRouter>
     </>
