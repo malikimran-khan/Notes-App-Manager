@@ -8,6 +8,7 @@ import {
   FaUserPlus,
 } from "react-icons/fa";
 import Spinner from "../../components/Spinner";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Signup() {
   const [form, setForm] = useState({
@@ -17,6 +18,7 @@ export default function Signup() {
     confirmPassword: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const navigate = useNavigate();
 
   // Handle input change
@@ -27,7 +29,7 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // basic validation before sending to backend
+    // Validation
     if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
       alert("All fields are required!");
       return;
@@ -52,12 +54,8 @@ export default function Signup() {
 
       const data = await res.json();
       if (res.ok) {
-        alert("🎉 Signup successful!");
-        console.log("User:", data);
-        localStorage.setItem("token", data.token);
-
-        // Navigate to login page after successful signup
-        navigate("/login");
+        // Instead of alert, show modal for verification info
+        setShowVerificationModal(true);
       } else {
         alert(data.message || "Signup failed");
       }
@@ -67,6 +65,11 @@ export default function Signup() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleVerificationOk = () => {
+    setShowVerificationModal(false);
+    navigate("/login");
   };
 
   return (
@@ -90,63 +93,31 @@ export default function Signup() {
           </p>
         </div>
 
-        {/* Full Name */}
-        <div className="flex items-center border rounded-lg mb-5 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
-          <FaUser className="text-gray-400 mr-3" />
-          <input
-            type="text"
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={handleChange}
-            required
-            className="w-full outline-none bg-transparent placeholder-gray-400"
-          />
-        </div>
+        {/* Inputs */}
+        {["fullName", "email", "password", "confirmPassword"].map((field, i) => {
+          const icons = [<FaUser />, <FaEnvelope />, <FaLock />, <FaLock />];
+          const placeholders = ["Full Name", "Email", "Password", "Confirm Password"];
+          const types = ["text", "email", "password", "password"];
+          return (
+            <div
+              key={i}
+              className="flex items-center border rounded-lg mb-5 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition"
+            >
+              <span className="text-gray-400 mr-3">{icons[i]}</span>
+              <input
+                type={types[i]}
+                name={field}
+                placeholder={placeholders[i]}
+                value={form[field]}
+                onChange={handleChange}
+                required
+                className="w-full outline-none bg-transparent placeholder-gray-400"
+              />
+            </div>
+          );
+        })}
 
-        {/* Email */}
-        <div className="flex items-center border rounded-lg mb-5 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
-          <FaEnvelope className="text-gray-400 mr-3" />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full outline-none bg-transparent placeholder-gray-400"
-          />
-        </div>
-
-        {/* Password */}
-        <div className="flex items-center border rounded-lg mb-5 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
-          <FaLock className="text-gray-400 mr-3" />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full outline-none bg-transparent placeholder-gray-400"
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div className="flex items-center border rounded-lg mb-6 p-3 bg-gray-50 shadow-sm focus-within:ring-2 focus-within:ring-[#10B981] transition">
-          <FaLock className="text-gray-400 mr-3" />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            required
-            className="w-full outline-none bg-transparent placeholder-gray-400"
-          />
-        </div>
-
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={submitting}
@@ -176,6 +147,40 @@ export default function Signup() {
           </Link>
         </p>
       </form>
+
+      {/* ✅ Verification Modal */}
+      <AnimatePresence>
+        {showVerificationModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-[#10B981]/30"
+            >
+              <FaEnvelope className="text-[#10B981] text-5xl mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-[#065F46] mb-3">
+                Account Verification
+              </h2>
+              <p className="text-gray-600 mb-6">
+                We've sent a verification link to your email account.  
+                Please verify your email to activate your account.
+              </p>
+              <button
+                onClick={handleVerificationOk}
+                className="bg-[#10B981] hover:bg-[#059669] text-white py-2 px-6 rounded-xl font-semibold shadow-md transition"
+              >
+                OK
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
