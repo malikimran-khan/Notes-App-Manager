@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaUser,
@@ -7,17 +7,18 @@ import {
   FaSignInAlt,
   FaUserPlus,
 } from "react-icons/fa";
-import Spinner from "../../components/Spinner";
 import { motion, AnimatePresence } from "framer-motion";
+import Spinner from "../../components/Spinner";
+import { AuthContext } from "../context/AuthContext"; // ✅ import context
 
 export default function Signup() {
+  const { signup, loading } = useContext(AuthContext); // ✅ use context API
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const [submitting, setSubmitting] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const navigate = useNavigate();
 
@@ -43,30 +44,16 @@ export default function Signup() {
       return;
     }
 
-    setSubmitting(true);
-
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        // Instead of alert, show modal for verification info
-        setShowVerificationModal(true);
-      } else {
-        alert(data.message || "Signup failed");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Server error. Please try again later.");
-    } finally {
-      setSubmitting(false);
+    // Call context signup
+    const result = await signup(form);
+    if (result.success) {
+      setShowVerificationModal(true); // show modal
+    } else {
+      alert(result.message);
     }
   };
 
+  // Navigate to login after OK
   const handleVerificationOk = () => {
     setShowVerificationModal(false);
     navigate("/login");
@@ -93,7 +80,7 @@ export default function Signup() {
           </p>
         </div>
 
-        {/* Inputs */}
+        {/* Input Fields */}
         {["fullName", "email", "password", "confirmPassword"].map((field, i) => {
           const icons = [<FaUser />, <FaEnvelope />, <FaLock />, <FaLock />];
           const placeholders = ["Full Name", "Email", "Password", "Confirm Password"];
@@ -120,14 +107,14 @@ export default function Signup() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={loading}
           className={`w-full py-3 rounded-xl font-semibold transition duration-300 shadow-md flex items-center justify-center ${
-            submitting
+            loading
               ? "bg-[#10B981]/70 cursor-not-allowed text-white"
               : "bg-[#10B981] hover:bg-[#059669] text-white"
           }`}
         >
-          {submitting ? (
+          {loading ? (
             <>
               <Spinner size={18} className="mr-2" /> Signing Up...
             </>

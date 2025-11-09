@@ -1,51 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { 
-  FaEnvelope, 
-  FaLock, 
-  FaUserPlus, 
-  FaSignInAlt, 
-  FaExclamationCircle 
+import {
+  FaEnvelope,
+  FaLock,
+  FaUserPlus,
+  FaSignInAlt,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import Spinner from "../../components/Spinner";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
+  const { login, loading } = useContext(AuthContext); // ✅ Using Context API
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // ✅ Handle input changes
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
+  // ✅ Handle login through AuthContext
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
 
-    try {
-      // Example backend endpoint (change to your actual API)
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    if (!form.email || !form.password) {
+      setError("Both fields are required!");
+      return;
+    }
 
-      const data = await res.json();
+    const result = await login(form);
 
-      if (!res.ok) {
-        throw new Error(data.message || "Invalid email or password");
-      }
-
-      // ✅ Save token in localStorage
-      localStorage.setItem("token", data.token);
-
-      // ✅ Navigate to protected page (e.g. About)
-      navigate("/about");
-    } catch (err) {
-      setError(err.message);
-      console.error("Login Error:", err.message);
-    } finally {
-      setSubmitting(false);
+    if (result.success) {
+      navigate("/about"); // Redirect to protected page
+    } else {
+      setError(result.message || "Invalid email or password");
     }
   };
 
@@ -55,14 +45,16 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="bg-white shadow-2xl p-10 rounded-3xl w-full max-w-md text-gray-800 border border-gray-200 relative overflow-hidden"
       >
-        {/* Floating Decorative Circles */}
+        {/* Decorative Circles */}
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#10B981]/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#10B981]/10 rounded-full blur-3xl animate-pulse"></div>
 
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <FaSignInAlt className="text-6xl text-[#10B981] mb-3" />
-          <h2 className="text-3xl font-extrabold text-[#065F46] mb-1">Welcome Back</h2>
+          <h2 className="text-3xl font-extrabold text-[#065F46] mb-1">
+            Welcome Back
+          </h2>
           <p className="text-gray-500 text-sm text-center">
             Login to continue to your Notes App
           </p>
@@ -107,17 +99,16 @@ export default function Login() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={loading}
           className={`w-full py-3 rounded-xl font-semibold transition duration-300 shadow-md flex items-center justify-center ${
-            submitting
+            loading
               ? "bg-[#10B981]/70 cursor-not-allowed text-white"
               : "bg-[#10B981] hover:bg-[#059669] text-white"
           }`}
         >
-          {submitting ? (
+          {loading ? (
             <>
-              <Spinner size={18} className="mr-2" />
-              Logging in...
+              <Spinner size={18} className="mr-2" /> Logging in...
             </>
           ) : (
             "Login"

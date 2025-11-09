@@ -1,33 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaExclamationCircle, FaSpinner } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
 
 export default function VerifyEmail() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { verifyEmail } = useContext(AuthContext); // ✅ Use Context API
   const [status, setStatus] = useState("loading"); // loading | success | error
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
-    const verifyUserEmail = async () => {
+    const verifyUser = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/auth/verify/${token}`);
-        setStatus("success");
-        setMessage(res.data.message || "Email verified successfully! You can now log in.");
+        const result = await verifyEmail(token); // ✅ Context API function
+        if (result.success) {
+          setStatus("success");
+          setMessage(result.message || "Email verified successfully! You can now log in.");
 
-        // Navigate to login after 5 seconds
-        setTimeout(() => navigate("/login"), 5000);
-      } catch (error) {
+          // Auto-redirect to login after 5 seconds
+          setTimeout(() => navigate("/login"), 5000);
+        } else {
+          setStatus("error");
+          setMessage(result.message || "Verification link invalid or expired.");
+        }
+      } catch (err) {
         setStatus("error");
-        setMessage(
-          error.response?.data?.message || "Verification link invalid or expired."
-        );
+        setMessage(err.message || "Verification failed.");
       }
     };
-    verifyUserEmail();
-  }, [token, navigate]);
+
+    verifyUser();
+  }, [token, navigate, verifyEmail]);
 
   return (
     <section className="flex flex-col items-center justify-center min-h-screen bg-[#F0FDF4] text-center px-6 relative overflow-hidden">
