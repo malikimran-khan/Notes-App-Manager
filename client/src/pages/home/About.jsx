@@ -2,7 +2,7 @@ import React from "react";
 import { FaStickyNote, FaCheckCircle, FaLock, FaCloudUploadAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-export default function Hero() {
+export default function About() {
   return (
     <section className="relative w-full min-h-screen bg-[#F0FDF4] flex flex-col items-center text-center px-6 py-20 overflow-hidden">
       
@@ -65,15 +65,7 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* Footer Text */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.9 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="absolute bottom-6 text-gray-400 text-sm"
-      >
-        ✨ Notes Manager App — Organize your ideas, tasks, and important information
-      </motion.p>
+     
     </section>
   );
 }

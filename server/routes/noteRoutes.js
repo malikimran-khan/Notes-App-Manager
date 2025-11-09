@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
-import { createNote, getUserNotes } from "../controllers/noteController.js";
+import { createNote, getUserNotes , updateNote, deleteNote } from "../controllers/noteController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -32,5 +32,7 @@ const upload = multer({ storage });
 // 🟢 Routes
 router.post("/", protect, upload.single("image"), createNote);
 router.get("/", protect, getUserNotes);
+router.put("/:id", protect, upload.single("image"), updateNote);
+router.delete("/:id", protect, deleteNote);
 
 export default router;

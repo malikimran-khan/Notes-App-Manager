@@ -40,7 +40,7 @@ export const NoteProvider = ({ children }) => {
     }
   };
 
-  // Fetch Notes (memoized)
+  // ✅ Fetch Notes
   const fetchNotes = useCallback(async () => {
     if (!token) return { success: false, message: "Not authorized" };
     setLoading(true);
@@ -58,7 +58,57 @@ export const NoteProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [token]); // only re-create when token changes
+  }, [token]);
+
+  // ✅ Delete Note
+  const deleteNote = async (id) => {
+    if (!token) return { success: false, message: "Not authorized" };
+    setLoading(true);
+    try {
+      await axios.delete(`http://localhost:5000/api/notes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotes((prev) => prev.filter((note) => note._id !== id));
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || "Failed to delete note",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Update Note
+  const updateNote = async (id, updatedData) => {
+    if (!token) return { success: false, message: "Not authorized" };
+    setLoading(true);
+    try {
+      const payload = new FormData();
+      if (updatedData.title) payload.append("title", updatedData.title);
+      if (updatedData.content) payload.append("content", updatedData.content);
+      if (updatedData.tags) payload.append("tags", updatedData.tags);
+      if (updatedData.image) payload.append("image", updatedData.image);
+
+      const res = await axios.put(`http://localhost:5000/api/notes/${id}`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setNotes((prev) => prev.map((note) => (note._id === id ? res.data.note : note)));
+      return { success: true, note: res.data.note };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || "Failed to update note",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <NoteContext.Provider
@@ -67,6 +117,8 @@ export const NoteProvider = ({ children }) => {
         loading,
         createNote,
         fetchNotes,
+        deleteNote,
+        updateNote,
       }}
     >
       {children}

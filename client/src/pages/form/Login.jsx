@@ -33,7 +33,7 @@ export default function Login() {
     const result = await login(form);
 
     if (result.success) {
-      navigate("/about"); // Redirect to protected page
+      navigate("/dashboard"); // Redirect to protected page
     } else {
       setError(result.message || "Invalid email or password");
     }
