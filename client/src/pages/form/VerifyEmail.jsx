@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaExclamationCircle, FaSpinner } from "react-icons/fa";
@@ -7,32 +7,43 @@ import { AuthContext } from "../context/AuthContext";
 export default function VerifyEmail() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { verifyEmail } = useContext(AuthContext); // ✅ Use Context API
+  const { verifyEmail } = useContext(AuthContext);
   const [status, setStatus] = useState("loading"); // loading | success | error
   const [message, setMessage] = useState("Verifying your email...");
+  const hasVerified = useRef(false); // 🧠 Prevent multiple verification calls
 
   useEffect(() => {
     const verifyUser = async () => {
+      // 🧠 Prevent double execution
+      if (hasVerified.current) return;
+      hasVerified.current = true;
+
       try {
-        const result = await verifyEmail(token); // ✅ Context API function
+        const result = await verifyEmail(token);
+
         if (result.success) {
           setStatus("success");
           setMessage(result.message || "Email verified successfully! You can now log in.");
 
-          // Auto-redirect to login after 5 seconds
+          // ✅ Only redirect once after success
           setTimeout(() => navigate("/login"), 5000);
         } else {
-          setStatus("error");
-          setMessage(result.message || "Verification link invalid or expired.");
+          // Only show error if not previously successful
+          if (status !== "success") {
+            setStatus("error");
+            setMessage(result.message || "Verification link invalid or expired.");
+          }
         }
       } catch (err) {
-        setStatus("error");
-        setMessage(err.message || "Verification failed.");
+        if (status !== "success") {
+          setStatus("error");
+          setMessage(err.message || "Verification failed.");
+        }
       }
     };
 
     verifyUser();
-  }, [token, navigate, verifyEmail]);
+  }, [token, navigate, verifyEmail, status]);
 
   return (
     <section className="flex flex-col items-center justify-center min-h-screen bg-[#F0FDF4] text-center px-6 relative overflow-hidden">
@@ -47,14 +58,12 @@ export default function VerifyEmail() {
         transition={{ duration: 0.8 }}
         className="bg-white shadow-2xl p-10 rounded-3xl max-w-md w-full z-10 border border-gray-100"
       >
-        {/* Icon */}
         <div className="flex justify-center mb-4">
           {status === "loading" && <FaSpinner className="text-[#10B981] text-5xl animate-spin" />}
           {status === "success" && <FaCheckCircle className="text-[#10B981] text-5xl" />}
           {status === "error" && <FaExclamationCircle className="text-red-500 text-5xl" />}
         </div>
 
-        {/* Heading */}
         <h2 className="text-2xl font-bold text-[#065F46] mb-2">
           {status === "loading"
             ? "Verifying Email..."
@@ -63,10 +72,8 @@ export default function VerifyEmail() {
             : "Verification Failed"}
         </h2>
 
-        {/* Message */}
         <p className="text-gray-700 mb-6">{message}</p>
 
-        {/* Button (only for success/error) */}
         {(status === "success" || status === "error") && (
           <Link
             to="/login"
@@ -77,7 +84,6 @@ export default function VerifyEmail() {
         )}
       </motion.div>
 
-      {/* Auto-redirect text */}
       {status === "success" && (
         <motion.p
           initial={{ opacity: 0 }}
