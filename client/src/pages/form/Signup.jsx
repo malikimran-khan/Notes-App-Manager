@@ -60,7 +60,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#F0FDF4] px-4">
+    <div className="flex justify-center items-center min-h-screen bg-[#F0FDF4] px-4 pt-14">
       <form
         onSubmit={handleSubmit}
         className="relative bg-white shadow-2xl p-10 rounded-3xl w-full max-w-md text-gray-800 border border-gray-200 overflow-hidden"
